@@ -2,32 +2,49 @@ package main
 
 import (
 	"context"
+	"local-mcp-assistant/config"
+	"local-mcp-assistant/tool"
 	"log"
+	"log/slog"
+	"os"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-type Input struct {
-	Name string `json:"name" jsonschema:"the name of the person to greet"`
-}
+func init() {
+	f, err := os.OpenFile("/tmp/mcp-assistant.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(f, nil)))
 
-type Output struct {
-	Greeting string `json:"greeting" jsonschema:"the greeting to tell to the user"`
-}
+	slog.Info("mcp-assistant started")
 
-func SayHi(ctx context.Context, req *mcp.CallToolRequest, input Input) (
-	*mcp.CallToolResult,
-	Output,
-	error,
-) {
-	return nil, Output{Greeting: "Hi " + input.Name}, nil
+	configPath := os.Getenv("MCP_ASSISTANT_CONFIG")
+	if configPath == "" {
+		slog.Warn("MCP_ASSISTANT_CONFIG not set")
+		return
+	}
+
+	_, err = config.Load(configPath)
+	if err != nil {
+		slog.Error("failed to load config", "err", err)
+		return
+	}
 }
 
 func main() {
-	// Create a server with a single tool.
-	server := mcp.NewServer(&mcp.Implementation{Name: "greeter", Version: "v1.0.0"}, nil)
-	mcp.AddTool(server, &mcp.Tool{Name: "greet", Description: "say hi in Japanese"}, SayHi)
-	// Run the server over stdin/stdout, until the client disconnects.
+	server := mcp.NewServer(
+		&mcp.Implementation{
+			Name:    "mcp-assistant",
+			Version: "v1.0.0",
+		},
+		nil,
+	)
+
+	// add tools
+	tool.AddTools(server)
+
 	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
 		log.Fatal(err)
 	}
