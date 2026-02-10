@@ -9,3 +9,7 @@
 ![img.png](example1-2.png)
 
 ![img.png](example1-3.png)
+
+## database schema 획득
+
+![img.png](example2-1.png)

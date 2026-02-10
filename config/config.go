@@ -11,12 +11,12 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
-	Name   string `mapstructure:"name"`
-	Host   string `mapstructure:"host"`
-	Port   int    `mapstructure:"port"`
-	User   string `mapstructure:"user"`
-	Pass   string `mapstructure:"pass"`
-	DBName string `mapstructure:"dbname"`
+	Name     string `mapstructure:"name"`
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	DBName   string `mapstructure:"dbname"`
 }
 
 var (

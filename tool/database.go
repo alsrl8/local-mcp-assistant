@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"local-mcp-assistant/config"
 	"local-mcp-assistant/schema"
+	"log/slog"
 	"strings"
 
+	_ "github.com/lib/pq"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -25,7 +27,8 @@ func connectDB(name string) (*sql.DB, error) {
 	}
 
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Pass, dbCfg.DBName)
+		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Password, dbCfg.DBName)
+	slog.Info("connecting to database", "dsn", dsn)
 	return sql.Open("postgres", dsn)
 }
 
