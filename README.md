@@ -49,14 +49,22 @@ make deploy
 
 ```json
 {
+  "globalShortcut": "",
   "mcpServers": {
     "assistant": {
       "command": "wsl.exe",
-      "args": ["/home/<username>/.local/bin/mcp-assistant"],
-      "env": {
-        "MCP_ASSISTANT_CONFIG": "/path/to/config.yaml"
-      }
+      "args": [
+        "bash",
+        "-c",
+        "MCP_ASSISTANT_CONFIG=/home/songmingi/.config/mcp-assistant/config.yaml /home/songmingi/.local/bin/mcp-assistant"
+      ]
     }
+  },
+  "preferences": {
+    "menuBarEnabled": false,
+    "legacyQuickEntryEnabled": false,
+    "coworkScheduledTasksEnabled": false,
+    "sidebarMode": "chat"
   }
 }
 ```
