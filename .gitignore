@@ -1,0 +1,51 @@
+# IDE configures
+.idea
+
+# Environment files
+.env
+.env.*
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/bin/
+/dist/
+
+# Go test coverage
+*.cover
+*.coverprofile
+coverage.txt
+coverage.html
+
+# Go profiling
+*.prof
+cpu.pprof
+mem.pprof
+
+# Go dependencies
+/vendor/
+go.work
+go.work.sum
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Server related
+*.log
+logs/
+*.key
+*.pem
+*.crt
+*.cert
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
