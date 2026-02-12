@@ -86,6 +86,92 @@ func QueryDB(ctx context.Context, req *mcp.CallToolRequest, input schema.QueryDB
 	return nil, schema.QueryDBOutput{Rows: result}, nil
 }
 
+func getWritableTables(dbName string) []string {
+	cfg := config.Get()
+	for _, d := range cfg.Databases {
+		if d.Name == dbName {
+			return d.WritableTables
+		}
+	}
+	return nil
+}
+
+func isWritableTable(dbName, tableName string) bool {
+	for _, t := range getWritableTables(dbName) {
+		if strings.EqualFold(t, tableName) {
+			return true
+		}
+	}
+	return false
+}
+
+// extractTargetTable parses the target table name from INSERT, UPDATE, DELETE queries.
+func extractTargetTable(query string) (string, error) {
+	tokens := strings.Fields(query)
+	if len(tokens) < 3 {
+		return "", fmt.Errorf("query too short to determine target table")
+	}
+
+	switch strings.ToUpper(tokens[0]) {
+	case "INSERT":
+		// INSERT INTO <table>
+		if strings.ToUpper(tokens[1]) != "INTO" {
+			return "", fmt.Errorf("invalid INSERT syntax")
+		}
+		return strings.ToLower(tokens[2]), nil
+	case "UPDATE":
+		// UPDATE <table>
+		return strings.ToLower(tokens[1]), nil
+	case "DELETE":
+		// DELETE FROM <table>
+		if strings.ToUpper(tokens[1]) != "FROM" {
+			return "", fmt.Errorf("invalid DELETE syntax")
+		}
+		return strings.ToLower(tokens[2]), nil
+	default:
+		return "", fmt.Errorf("unsupported statement: %s", tokens[0])
+	}
+}
+
+func ExecuteDB(ctx context.Context, req *mcp.CallToolRequest, input schema.ExecuteDBInput) (
+	*mcp.CallToolResult, schema.ExecuteDBOutput, error,
+) {
+	q := strings.TrimSpace(input.Query)
+	upper := strings.ToUpper(q)
+
+	// only INSERT, UPDATE, DELETE allowed
+	if !strings.HasPrefix(upper, "INSERT") && !strings.HasPrefix(upper, "UPDATE") && !strings.HasPrefix(upper, "DELETE") {
+		return nil, schema.ExecuteDBOutput{}, fmt.Errorf("only INSERT, UPDATE, DELETE queries are allowed. use query_db for SELECT")
+	}
+
+	tableName, err := extractTargetTable(q)
+	if err != nil {
+		return nil, schema.ExecuteDBOutput{}, fmt.Errorf("failed to parse table name: %w", err)
+	}
+
+	if !isWritableTable(input.Database, tableName) {
+		return nil, schema.ExecuteDBOutput{}, fmt.Errorf("table %q is not in writable_tables for database %q", tableName, input.Database)
+	}
+
+	db, err := connectDB(input.Database)
+	if err != nil {
+		return nil, schema.ExecuteDBOutput{}, err
+	}
+	defer func(db *sql.DB) {
+		_ = db.Close()
+	}(db)
+
+	result, err := db.ExecContext(ctx, input.Query)
+	if err != nil {
+		return nil, schema.ExecuteDBOutput{}, err
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	slog.Info("execute_db", "database", input.Database, "table", tableName, "rows_affected", rowsAffected)
+
+	return nil, schema.ExecuteDBOutput{RowsAffected: rowsAffected}, nil
+}
+
 func DescribeSchema(ctx context.Context, req *mcp.CallToolRequest, input schema.DBSchemaInput) (
 	*mcp.CallToolResult, schema.DBSchemaOutput, error,
 ) {
