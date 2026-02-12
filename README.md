@@ -13,14 +13,19 @@ Go로 작성된 경량 MCP(Model Context Protocol) 서버입니다. WSL 환경�
 | `list_dir` | 디렉토리 내 파일/폴더 목록 조회 (이름, 크기, 타입) |
 | `read_file` | 파일 내용 읽기 (512KB 초과 시 자동 truncate) |
 | `grep` | 정규식 기반 파일/디렉토리 내 텍스트 검색 (context line 지원) |
+| `list_databases` | 설정된 데이터베이스 연결 목록 조회 |
+| `describe_schema` | 테이블 및 컬럼 정보 조회 |
+| `query_db` | 읽기 전용 SQL 쿼리 실행 (SELECT만 허용) |
+| `execute_db` | 쓰기 SQL 쿼리 실행 (INSERT/UPDATE/DELETE, `writable_tables`에 등록된 테이블만 허용) |
 
-모든 도구는 Windows 경로(`C:\Users\...`)를 입력받아 WSL 경로(`/mnt/c/Users/...`)로 자동 변환합니다.
+모든 파일시스템 도구는 Windows 경로(`C:\Users\...`)를 입력받아 WSL 경로(`/mnt/c/Users/...`)로 자동 변환합니다.
 
 ## 기술 스택
 
 - **Go 1.25** — [modelcontextprotocol/go-sdk](https://github.com/modelcontextprotocol/go-sdk)
 - **Stdio Transport** — MCP 통신
 - **Viper** — 설정 관리
+- **PostgreSQL** — 데이터베이스 (lib/pq)
 - **WSL** — 런타임 환경
 
 ## 시작하기
@@ -45,6 +50,21 @@ make deploy
 
 ### Claude Desktop 설정
 
+`config.yaml` (데이터베이스 설정):
+
+```yaml
+databases:
+  - name: mydb
+    host: localhost
+    port: 5432
+    user: postgres
+    password: secret
+    dbname: myapp
+    writable_tables:    # 이 테이블들만 INSERT/UPDATE/DELETE 허용
+      - users
+      - logs
+```
+
 `claude_desktop_config.json`:
 
 ```json
@@ -56,15 +76,9 @@ make deploy
       "args": [
         "bash",
         "-c",
-        "MCP_ASSISTANT_CONFIG=/home/songmingi/.config/mcp-assistant/config.yaml /home/songmingi/.local/bin/mcp-assistant"
+        "MCP_ASSISTANT_CONFIG=/home/username/.config/mcp-assistant/config.yaml /home/username/.local/bin/mcp-assistant"
       ]
     }
-  },
-  "preferences": {
-    "menuBarEnabled": false,
-    "legacyQuickEntryEnabled": false,
-    "coworkScheduledTasksEnabled": false,
-    "sidebarMode": "chat"
   }
 }
 ```

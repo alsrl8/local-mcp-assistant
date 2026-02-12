@@ -42,4 +42,11 @@ func AddTools(server *mcp.Server) {
 		Description: "Execute a read-only SQL query (SELECT only) against a database. " +
 			"Use list_databases to find available databases and describe_schema to understand table structures first.",
 	}, QueryDB)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name: "execute_db",
+		Description: "Execute a write SQL query (INSERT, UPDATE, DELETE) against a database. " +
+			"Only tables listed in writable_tables config are allowed. " +
+			"Use describe_schema to understand table structures first.",
+	}, ExecuteDB)
 }

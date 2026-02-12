@@ -32,3 +32,12 @@ type DBSchemaOutput struct {
 type ListDBOutput struct {
 	Databases []string `json:"databases"`
 }
+
+type ExecuteDBInput struct {
+	Database string `json:"database" jsonschema:"database name from config"`
+	Query    string `json:"query" jsonschema:"SQL query to execute (INSERT, UPDATE, DELETE). Only allowed on writable tables."`
+}
+
+type ExecuteDBOutput struct {
+	RowsAffected int64 `json:"rows_affected"`
+}
